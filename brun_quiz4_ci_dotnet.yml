@@ -1,19 +1,91 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
+# ============================================================
+#  CI Pipeline : brun_quiz4_ci_dotnet
+#  Project     : brun_quiz4_agile
+#  Repo        : brun_quiz4_dotnet
+#  Author      : Bruno Farias
+#  Date        : April 6, 2026
+# ============================================================
 
 trigger:
-- main
+  branches:
+    include:
+      - main
 
 pool:
-  vmImage: ubuntu-latest
+  # Self-hosted agent pool (Requirement 9)
+  name: 'Default'
+  # Fallback – uncomment below if self-hosted agent unavailable:
+  # vmImage: 'ubuntu-latest'
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+variables:
+  buildConfiguration: 'Release'
+  projectPath: 'brun_quiz4_dotnet.csproj'
+  artifactName: 'brun_quiz4_drop'
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+stages:
+
+# ── Stage 1: Restore & Build ──────────────────────────────────
+- stage: Build
+  displayName: 'Restore, Build & Test'
+  jobs:
+  - job: BuildJob
+    displayName: 'Build brun_quiz4_dotnet'
+    steps:
+
+    - task: UseDotNet@2
+      displayName: 'Use .NET 8 SDK'
+      inputs:
+        packageType: 'sdk'
+        version: '8.x'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'dotnet restore'
+      inputs:
+        command: 'restore'
+        projects: '$(projectPath)'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'dotnet build'
+      inputs:
+        command: 'build'
+        projects: '$(projectPath)'
+        arguments: '--configuration $(buildConfiguration) --no-restore'
+
+# ── Stage 2: Publish & Upload Artifact ───────────────────────
+- stage: Publish
+  displayName: 'Publish Artifact'
+  dependsOn: Build
+  condition: succeeded()
+  jobs:
+  - job: PublishJob
+    displayName: 'Publish & Upload'
+    steps:
+
+    - task: UseDotNet@2
+      displayName: 'Use .NET 8 SDK'
+      inputs:
+        packageType: 'sdk'
+        version: '8.x'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'dotnet restore (publish stage)'
+      inputs:
+        command: 'restore'
+        projects: '$(projectPath)'
+
+    - task: DotNetCoreCLI@2
+      displayName: 'dotnet publish'
+      inputs:
+        command: 'publish'
+        publishWebProjects: false
+        projects: '$(projectPath)'
+        arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+        zipAfterPublish: true
+        modifyOutputPath: true
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Upload artifact to pipeline'
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: '$(artifactName)'
+        publishLocation: 'Container'

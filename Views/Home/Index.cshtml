@@ -1,0 +1,59 @@
+@model brun_quiz4_dotnet.Models.HomeViewModel
+@{
+    ViewData["Title"] = "Product Database";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] – brun_quiz4_dotnet</title>
+    <style>
+        body  { font-family: Segoe UI, sans-serif; margin: 2rem; background: #f5f7fa; color: #222; }
+        h1    { color: #0078d4; }
+        .msg  { background: #e6f4ea; border-left: 4px solid #34a853; padding: .75rem 1rem;
+                border-radius: 4px; margin-bottom: 1.5rem; font-weight: 600; }
+        table { border-collapse: collapse; width: 100%; background: #fff;
+                box-shadow: 0 1px 4px rgba(0,0,0,.12); border-radius: 6px; overflow: hidden; }
+        th    { background: #0078d4; color: #fff; padding: .6rem 1rem; text-align: left; }
+        td    { padding: .6rem 1rem; border-bottom: 1px solid #eee; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #f0f6ff; }
+    </style>
+</head>
+<body>
+    <h1>📦 Product Database</h1>
+
+    <div class="msg">✅ @Model.DatabaseMessage</div>
+
+    @if (Model.Products.Any())
+    {
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Price (CAD)</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var p in Model.Products)
+                {
+                    <tr>
+                        <td>@p.Id</td>
+                        <td>@p.Name</td>
+                        <td>@p.Category</td>
+                        <td>$@p.Price.ToString("F2")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p>No products found in the database.</p>
+    }
+</body>
+</html>
